@@ -1,4 +1,4 @@
-# 🛠️ BootScribe (o el nombre que elijas)
+# 🛠️ BootScribe
 
 Una alternativa ligera, portátil y de código abierto a herramientas comerciales de gestión UEFI, diseñada en Python y `tkinter`.
 
