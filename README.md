@@ -1,4 +1,4 @@
-# 🛠️ BootScribe
+# BootScribe
 
 Una alternativa ligera, portátil y de código abierto a herramientas comerciales de gestión UEFI, diseñada en Python y `tkinter`.
 
@@ -18,6 +18,7 @@ Permite crear, listar, reordenar y preparar entradas de arranque UEFI (como **rE
 ## ⚠️ Nota Importante sobre Entradas Deshabilitadas / rEFInd
 
 En sistemas modernos con Windows 10 y 11, las políticas de seguridad del sistema operativo a veces impiden modificar el estado de habilitación (*Active Flag*) de una entrada UEFI creada por terceros directamente desde la API de Windows.
+Pero ayuda a crear entradas nuevas de EFI
 
 > **Flujo de trabajo recomendado:**
 > 1. Crea y registra tu nueva entrada (ej. rEFInd) usando **BootScribe**.
