@@ -1,4 +1,4 @@
-# BootScribe v1.5
+# BootScribe v2.0.0
 <img width="1577" height="912" alt="Vista BootScribe v1 5" src="https://github.com/user-attachments/assets/cd9898d2-3a16-4ca1-9a3e-b39a6d8feae8" />
 Una alternativa ligera, portátil y de código abierto a herramientas comerciales de gestión UEFI, desarrollada en Python y tkinter.
 
