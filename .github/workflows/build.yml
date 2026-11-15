@@ -6,7 +6,7 @@ on:
       - 'v*' # Se ejecuta automáticamente cada vez que subes una etiqueta que empiece con "v" (ej. v1.6.0)
 
 permissions:
-  contents: write # Permiso necesario para que GitHub cree la Release automáticamente
+  contents: write
 
 jobs:
   build:
@@ -27,7 +27,7 @@ jobs:
 
     - name: Build BootScribe (--onedir)
       run: |
-        pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe bootscribe.py
+        pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe-$version-win64 bootscribe.py
 
     - name: Package as ZIP with Version Name
       shell: pwsh
