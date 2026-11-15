@@ -1,7 +1,5 @@
-# BootScribe v2.0.0
-
-<img width="1576" height="867" alt="Vista BootScribe v2 0 0" src="https://github.com/user-attachments/assets/4b146c9c-6cb4-4346-a9d2-a7fc5dda1e53" />
-
+# BootScribe
+<img width="1186" height="751" alt="Vista BootScribe v1 4" src="https://github.com/user-attachments/assets/f86116c7-3dbe-4761-9c9c-739796e5a99b" />
 Una alternativa ligera, portátil y de código abierto a herramientas comerciales de gestión UEFI, desarrollada en Python y tkinter.
 
 Esta utilidad permite listar, crear, reordenar y configurar entradas de arranque UEFI (como rEFInd, GRUB u otros entornos), así como redirigir o conmutar el gestor de arranque nativo de Windows ({bootmgr}) de forma dinámica directamente en la NVRAM mediante comandos avanzados de bcdedit.
