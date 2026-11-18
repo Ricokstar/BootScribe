@@ -1,5 +1,6 @@
-> 🇺🇸 **English** | 🇪🇸 *[Español](#-versión-en-español)*
-> # BootScribe v3.0.0
+🇺🇸 **English** | 🇪🇸 *[Español](#-versión-en-español)*
+
+# BootScribe v3.0.0
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
