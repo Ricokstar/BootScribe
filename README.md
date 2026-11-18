@@ -1,9 +1,9 @@
+> 🇺🇸 **English** | 🇪🇸 *[Español](#-versión-en-español)*
+> # BootScribe v3.0.0
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
 ![Language](https://img.shields.io/badge/Language-EN%20%7C%20ES-orange)
-# BootScribe v3.0.0
-> 🇺🇸 **English** | 🇪🇸 *[Español más abajo](#-versión-en-español)*
 <img width="1572" height="902" alt="Vista BootScribe v3 0 0 EN" src="https://github.com/user-attachments/assets/9445fd93-5430-4532-a0e8-9ba0a5c6f34e" />
 A lightweight, portable, and open-source alternative to commercial UEFI management tools, developed in Python and `tkinter`.
 
@@ -124,8 +124,11 @@ If `{bootmgr}` itself is broken and no other entry works:
 ---
 
 # 🇪🇸 **Español**
-
-## BootScribe v3.0.0
+# BootScribe v3.0.0
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
+![License](https://img.shields.io/badge/License-Open%20Source-green)
+![Language](https://img.shields.io/badge/Language-EN%20%7C%20ES-orange)
 <img width="1575" height="902" alt="Vista BootScribe v3 0 0" src="https://github.com/user-attachments/assets/01772099-5629-4685-9357-178b8666c1f0" />
 Una alternativa ligera, portátil y de código abierto a las herramientas comerciales de gestión UEFI, desarrollada en Python y `tkinter`.
 
