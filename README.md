@@ -5,7 +5,7 @@
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
 ![Language](https://img.shields.io/badge/Language-EN%20%7C%20ES-orange)
 
-> 🇺🇸 **English** | 🇪🇸 *[Versión en Español más abajo](#-versión-en-español)*
+> 🇺🇸 **English** | 🇪🇸 *[Español más abajo](#-versión-en-español)*
 
 A lightweight, portable, and open-source alternative to commercial UEFI management tools, developed in Python and `tkinter`.
 
@@ -13,7 +13,7 @@ This utility allows you to list, create, reorder, and configure UEFI boot entrie
 
 ---
 
-## ✨ Highlights & Key Features
+## Highlights & Key Features
 
 - **Multi-language Support (ES / EN):** Bilingual interface with dynamic switching between **English** and **Spanish**.
 - **Preview & Safe Confirmation:** Before applying critical modifications to NVRAM or `{bootmgr}`, BootScribe displays an exact preview of the commands and changes about to be executed, requiring explicit user confirmation.
@@ -26,7 +26,7 @@ This utility allows you to list, create, reorder, and configure UEFI boot entrie
 
 ---
 
-## ⚙️ How It Works (`{bootmgr}`)
+## How It Works (`{bootmgr}`)
 
 On modern Windows systems with NVRAM and Secure Boot restrictions, the operating system often reverts boot order changes after an update. To solve this, BootScribe uses path redirection in `{bootmgr}`:
 
@@ -35,7 +35,7 @@ On modern Windows systems with NVRAM and Secure Boot restrictions, the operating
 
 ---
 
-## 🚀 How to Use BootScribe
+## How to Use BootScribe
 
 1. **Download & Run:** Go to the [Releases](../../releases) section on GitHub, download the `.zip` file of the latest version, extract it, and run **`BootScribe.exe`** (it will automatically request Administrator privileges, which are required to interact with `bcdedit`).
 2. **Select Language:** Choose between English or Spanish in the interface according to your preference.
@@ -45,7 +45,7 @@ On modern Windows systems with NVRAM and Secure Boot restrictions, the operating
 
 ---
 
-## ⚠️ Important Notes
+## Important Notes
 
 > [!IMPORTANT]
 > **Regarding Disabled Entries / rEFInd**  
@@ -78,10 +78,54 @@ If you want to clone this repository and build the application yourself:
 
 3. **Run:** You will find the compiled program ready to use inside the `dist\BootScribe\BootScribe.exe` folder.
 
+##  Recovery & Troubleshooting (If the System Fails to Boot)
+
+If an invalid `.efi` path is configured or an entry becomes corrupted, Windows Boot Manager (`{bootmgr}`) may fail to load (displaying an error screen like `0xc000000f` or `0xc0000225`). You can restore any bootloader directly from your **BIOS/UEFI** or **Windows Recovery** without losing data:
+
+### Method 1: Change Boot Priority in BIOS/UEFI (Fastest)
+1. **Enter BIOS/UEFI:** Restart your PC and repeatedly press your motherboard's setup key (`F2`, `F12`, `DEL`, `ESC`, or `F10` depending on the manufacturer).
+2. **Navigate to Boot Settings:** Go to the **Boot** or **Startup** tab.
+3. **Select Boot Override / Priority:**
+   - Look for **UEFI Hard Disk Drive BBS Priorities** or **Boot Option Priorities**.
+   - Switch **Boot Option #1** directly to an intact entry (such as `Windows Boot Manager`, `ubuntu`, or `rEFInd`).
+4. **Save & Exit:** Press `F10` to save changes and reboot. Once inside Windows, open **BootScribe** and fix or reset the `{bootmgr}` path.
+
+### Method 2: Boot from a Specific `.efi` File (ASUS, Dell, HP, Lenovo, MSI)
+Many modern UEFI firmwares include a built-in EFI file browser:
+1. Enter your **BIOS/UEFI** setup or **One-Time Boot Menu** (`F12`, `F8`, `F11`, or `ESC`).
+2. Select **Boot from EFI File** (or *Launch EFI Shell from filesystem device*).
+3. Select your **EFI System Partition (ESP)** (usually a small `100MB–500MB` FAT32 partition).
+4. Browse and select the `.efi` binary you want to boot:
+   - **Windows Default:** `\EFI\Microsoft\Boot\bootmgfw.efi`
+   - **rEFInd:** `\EFI\refind\refind_x64.efi`
+   - **GRUB (Ubuntu/Debian):** `\EFI\ubuntu\grubx64.efi`
+
+### Method 3: Restore `{bootmgr}` via Command Prompt (Windows Recovery / USB)
+If `{bootmgr}` itself is broken and no other entry works:
+1. Boot from a **Windows Installation USB** (or let Windows fail 3 times to trigger **Automatic Repair**).
+2. Go to **Repair your computer** → **Troubleshoot** → **Advanced options** → **Command Prompt**.
+3. Reset `{bootmgr}` to the default Windows bootloader:
+   ```cmd
+   bcdedit /set "{bootmgr}" path \EFI\Microsoft\Boot\bootmgfw.efi
+   ```
+4. *(Optional)* If the EFI partition is damaged, rebuild the boot files completely:
+   ```cmd
+   diskpart
+   list volume
+   ```
+   *(Identify the FAT32 volume of ~100MB-500MB, e.g., Volume 2, and assign it a letter)*:
+   ```cmd
+   select volume 2
+   assign letter=Z:
+   exit
+   bcdboot C:\Windows /s Z: /f UEFI
+   ```
+5. Close the terminal and click **Continue** to boot normally into Windows.
+
 ---
 ---
 
-# 🇪🇸 Versión en Español
+# 🇪🇸 **Español**
 
 ## BootScribe v3.0.0
 
@@ -91,7 +135,7 @@ Esta utilidad permite listar, crear, reordenar y configurar entradas de arranque
 
 ---
 
-## ✨ Novedades y Características Principales
+## Novedades y Características Principales
 
 - **Soporte Multi-idioma (ES / EN):** Interfaz bilingüe con cambio dinámico entre **Español** e **Inglés**.
 - **Vista Previa y Confirmación Segura:** Antes de aplicar modificaciones críticas en la NVRAM o en `{bootmgr}`, BootScribe muestra una vista previa exacta de los comandos y cambios que se van a ejecutar, requiriendo confirmación explícita del usuario.
@@ -104,7 +148,7 @@ Esta utilidad permite listar, crear, reordenar y configurar entradas de arranque
 
 ---
 
-## ⚙️ Método de Funcionamiento (`{bootmgr}`)
+## Método de Funcionamiento (`{bootmgr}`)
 
 En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistema operativo suele revertir los cambios en el orden de arranque tras una actualización. Para solucionarlo, BootScribe emplea la técnica de redirección de ruta en `{bootmgr}`:
 
@@ -113,7 +157,7 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 
 ---
 
-## 🚀 Cómo usar BootScribe
+## Cómo usar BootScribe
 
 1. **Descargar y Ejecutar:** Ve a la sección de [Releases](../../releases) en GitHub, descarga el archivo `.zip` de la última versión, extráelo y ejecuta **`BootScribe.exe`** (solicitará permisos de Administrador automáticamente, necesarios para interactuar con `bcdedit`).
 2. **Seleccionar Idioma:** Elige entre Español o Inglés según tu preferencia en la interfaz.
@@ -123,7 +167,7 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 
 ---
 
-## ⚠️ Notas Importantes
+## Notas Importantes
 
 > [!IMPORTANT]
 > **Sobre Entradas Deshabilitadas / rEFInd**  
@@ -140,7 +184,7 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 
 ---
 
-## 🛠️ Requisitos y Compilación desde el Código Fuente
+## Requisitos y Compilación desde el Código Fuente
 
 Si deseas clonar este repositorio y compilar la aplicación tú mismo:
 
@@ -155,3 +199,47 @@ Si deseas clonar este repositorio y compilar la aplicación tú mismo:
    ```
 
 3. **Ejecutar:** Encontrarás el programa compilado y listo para usar dentro de la carpeta `dist\BootScribe\BootScribe.exe`.
+
+##  Recuperación y Solución de Problemas (Si el sistema no arranca)
+
+Si se configura una ruta `.efi` inválida o una entrada se corrompe, el Gestor de Arranque de Windows (`{bootmgr}`) puede fallar al iniciar (mostrando un error como `0xc000000f` o `0xc0000225`). Puedes restaurar cualquier gestor de arranque directamente desde tu **BIOS/UEFI** o la **Recuperación de Windows** sin perder datos:
+
+### Método 1: Cambiar la Prioridad de Arranque en BIOS/UEFI (El más rápido)
+1. **Entrar a la BIOS/UEFI:** Reinicia tu PC y presiona repetidamente la tecla de configuración de tu placa madre (`F2`, `F12`, `SUPR/DEL`, `ESC` o `F10` según el fabricante).
+2. **Ir a las opciones de arranque:** Dirígete a la pestaña **Boot** o **Startup**.
+3. **Cambiar prioridad / Boot Override:**
+   - Busca **UEFI Hard Disk Drive BBS Priorities** o **Boot Option Priorities**.
+   - Cambia la **Opción de arranque #1 (Boot Option #1)** directamente hacia una entrada intacta (como `Windows Boot Manager`, `ubuntu` o `rEFInd`).
+4. **Guardar y salir:** Presiona `F10` para guardar los cambios y reiniciar. Una vez dentro de Windows, abre **BootScribe** y corrige o restablece la ruta de `{bootmgr}`.
+
+### Método 2: Arrancar desde un archivo `.efi` específico (ASUS, Dell, HP, Lenovo, MSI)
+Muchos firmwares UEFI modernos incluyen un explorador de archivos EFI integrado:
+1. Entra a la configuración de tu **BIOS/UEFI** o al **Menú de Arranque Único** (`F12`, `F8`, `F11` o `ESC`).
+2. Selecciona **Boot from EFI File** (o *Arrancar desde archivo EFI*).
+3. Elige tu **Partición del Sistema EFI (ESP)** (usualmente una partición FAT32 pequeña de `100MB a 500MB`).
+4. Navega y selecciona el binario `.efi` que desees iniciar:
+   - **Windows por defecto:** `\EFI\Microsoft\Boot\bootmgfw.efi`
+   - **rEFInd:** `\EFI\refind\refind_x64.efi`
+   - **GRUB (Ubuntu/Debian):** `\EFI\ubuntu\grubx64.efi`
+
+### Método 3: Restaurar `{bootmgr}` desde Símbolo del Sistema (Recuperación de Windows / USB)
+Si el propio `{bootmgr}` quedó dañado y ninguna otra entrada inicia:
+1. Arranca desde un **USB de instalación de Windows** (o deja que Windows falle 3 veces seguidas para que abra la **Reparación automática**).
+2. Ve a **Reparar el equipo** → **Solucionar problemas** → **Opciones avanzadas** → **Símbolo del sistema**.
+3. Restablece `{bootmgr}` al cargador predeterminado de Windows:
+   ```cmd
+   bcdedit /set "{bootmgr}" path \EFI\Microsoft\Boot\bootmgfw.efi
+   ```
+4. *(Opcional)* Si los archivos de arranque EFI se dañaron por completo, reconstrúyelos:
+   ```cmd
+   diskpart
+   list volume
+   ```
+   *(Identifica el volumen FAT32 de ~100MB-500MB, por ejemplo Volumen 2, y asígnale una letra)*:
+   ```cmd
+   select volume 2
+   assign letter=Z:
+   exit
+   bcdboot C:\Windows /s Z: /f UEFI
+   ```
+5. Cierra la consola y haz clic en **Continuar** para iniciar Windows normalmente.
