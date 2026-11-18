@@ -1,10 +1,11 @@
+
 # BootScribe v3.0.0
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
 ![Language](https://img.shields.io/badge/Language-EN%20%7C%20ES-orange)
-
+<img width="1575" height="902" alt="Vista BootScribe v3 0 0" src="https://github.com/user-attachments/assets/01772099-5629-4685-9357-178b8666c1f0" />
 > 🇺🇸 **English** | 🇪🇸 *[Español más abajo](#-versión-en-español)*
 
 A lightweight, portable, and open-source alternative to commercial UEFI management tools, developed in Python and `tkinter`.
