@@ -1,9 +1,9 @@
-name: Build and Release BootScribe
+name: Build and Release
 
 on:
   push:
     tags:
-      - 'v*' # Se ejecuta automáticamente cada vez que subes una etiqueta que empiece con "v" (ej. v1.6.0)
+      - 'v*'
 
 permissions:
   contents: write
@@ -13,31 +13,31 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pyinstaller
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller
 
-    - name: Build BootScribe (--onedir)
-      run: |
-        pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe-$version-win64 bootscribe.py
+      - name: Build with PyInstaller
+        run: |
+          pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe bootscribe.py
 
-    - name: Package as ZIP with Version Name
-      shell: pwsh
-      run: |
-        $version = "${{ github.ref_name }}"
-        Compress-Archive -Path dist/BootScribe/* -DestinationPath "BootScribe-$version-win64.zip"
+      - name: Archive into ZIP
+        run: |
+          Compress-Archive -Path "dist\BootScribe\*" -DestinationPath "BootScribe-${{ github.ref_name }}-win64.zip"
 
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: BootScribe-${{ github.ref_name }}-win64.zip
-        generate_release_notes: true
-        prerelease: ${{ startsWith(github.ref_name, 'v0.') }}
+      - name: Create Release and Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: BootScribe-${{ github.ref_name }}-win64.zip
+          draft: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
