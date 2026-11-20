@@ -191,7 +191,7 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 
 ## Notas Importantes
 
-> [!IMPORTANTE]
+> [!IMPORTANT]
 > **Sobre Entradas Deshabilitadas / rEFInd**  
 > En sistemas modernos con Windows 10 y 11, las políticas de seguridad del sistema operativo pueden impedir modificar el estado de habilitación (_Active Flag_) de una entrada UEFI creada por terceros directamente desde Windows.
 >
@@ -201,7 +201,7 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 > 2. Utiliza el botón de reinicio directo para ingresar a la configuración de la **BIOS / UEFI**.
 > 3. Habilita la nueva entrada creada y selecciónala como primera en el orden de prioridad del firmware (_Boot Priority Order_).
 
-> [!Advertencia]
+> [!WARNING]
 > **Sobre Windows Defender / SmartScreen**  
 > Como BootScribe es una herramienta gratuita y de código abierto compilada sin un certificado comercial de firma digital, es posible que Windows SmartScreen muestre una advertencia al abrirlo por primera vez. Puedes omitirla de forma segura haciendo clic en **"Más información" → "Ejecutar de todos modos"**. Todo el código fuente está disponible en este repositorio para su auditoría.
 >
