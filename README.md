@@ -1,6 +1,7 @@
-# 🇺🇸 English | 🇪🇸 *[Español](#-español)*
+# 🇺🇸 English | 🇪🇸 _[Español](#-español)_
 
 # BootScribe v3.0.0
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
@@ -48,16 +49,25 @@ On modern Windows systems with NVRAM and Secure Boot restrictions, the operating
 
 > [!IMPORTANT]
 > **Regarding Disabled Entries / rEFInd**  
-> On modern Windows 10 and 11 systems, operating system security policies may prevent modifying the active state (*Active Flag*) of third-party UEFI entries directly from Windows.
+> On modern Windows 10 and 11 systems, operating system security policies may prevent modifying the active state (_Active Flag_) of third-party UEFI entries directly from Windows.
 >
 > **Recommended workflow for new entries:**
+>
 > 1. Create and register your new entry (e.g., rEFInd) using **BootScribe**.
 > 2. Use the direct reboot button to enter the **BIOS / UEFI** settings.
-> 3. Enable the newly created entry and set it as first in the firmware priority order (*Boot Priority Order*).
+> 3. Enable the newly created entry and set it as first in the firmware priority order (_Boot Priority Order_).
 
 > [!WARNING]
 > **Regarding Windows Defender / SmartScreen**  
 > Because BootScribe is a free, open-source tool compiled without a commercial digital signing certificate, Windows SmartScreen may show a warning when opening it for the first time. You can safely bypass it by clicking **"More info" → "Run anyway"**. All source code is fully available in this repository for auditing.
+>
+> **Known Behavior (`The NVRAM changed` dialog):**
+> Shielding/redirecting `{bootmgr}` writes to NVRAM immediately. If you shield `{bootmgr}` **first** and then reorder boot priorities without refreshing, BootScribe's safety check will block saving with _"The NVRAM changed since the list was loaded"_ to prevent overwriting stale state.
+>
+> **How to avoid it:**
+>
+> 1. Either **reorder your boot priorities and apply/save first**, and **shield `{bootmgr}` last**; OR
+> 2. If you already shielded `{bootmgr}`, click **Discard / Refresh** to reload the updated NVRAM state before reordering priorities.
 
 ---
 
@@ -66,22 +76,25 @@ On modern Windows systems with NVRAM and Secure Boot restrictions, the operating
 If you want to clone this repository and build the application yourself:
 
 1. **Requirements:** Install **Python 3.10+** and **PyInstaller**:
+
    ```cmd
    pip install pyinstaller
    ```
 
 2. **Build the Application:** Run the following command in the project root (making sure to include the `fonts` folder and `bootscribe.ico` icon):
+
    ```cmd
    pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe bootscribe.py
    ```
 
 3. **Run:** You will find the compiled program ready to use inside the `dist\BootScribe\BootScribe.exe` folder.
 
-##  Recovery & Troubleshooting (If the System Fails to Boot)
+## Recovery & Troubleshooting (If the System Fails to Boot)
 
 If an invalid `.efi` path is configured or an entry becomes corrupted, Windows Boot Manager (`{bootmgr}`) may fail to load (displaying an error screen like `0xc000000f` or `0xc0000225`). You can restore any bootloader directly from your **BIOS/UEFI** or **Windows Recovery** without losing data:
 
 ### Method 1: Change Boot Priority in BIOS/UEFI (Fastest)
+
 1. **Enter BIOS/UEFI:** Restart your PC and repeatedly press your motherboard's setup key (`F2`, `F12`, `DEL`, `ESC`, or `F10` depending on the manufacturer).
 2. **Navigate to Boot Settings:** Go to the **Boot** or **Startup** tab.
 3. **Select Boot Override / Priority:**
@@ -90,9 +103,11 @@ If an invalid `.efi` path is configured or an entry becomes corrupted, Windows B
 4. **Save & Exit:** Press `F10` to save changes and reboot. Once inside Windows, open **BootScribe** and fix or reset the `{bootmgr}` path.
 
 ### Method 2: Boot from a Specific `.efi` File (ASUS, Dell, HP, Lenovo, MSI)
+
 Many modern UEFI firmwares include a built-in EFI file browser:
+
 1. Enter your **BIOS/UEFI** setup or **One-Time Boot Menu** (`F12`, `F8`, `F11`, or `ESC`).
-2. Select **Boot from EFI File** (or *Launch EFI Shell from filesystem device*).
+2. Select **Boot from EFI File** (or _Launch EFI Shell from filesystem device_).
 3. Select your **EFI System Partition (ESP)** (usually a small `100MB–500MB` FAT32 partition).
 4. Browse and select the `.efi` binary you want to boot:
    - **Windows Default:** `\EFI\Microsoft\Boot\bootmgfw.efi`
@@ -100,19 +115,21 @@ Many modern UEFI firmwares include a built-in EFI file browser:
    - **GRUB (Ubuntu/Debian):** `\EFI\ubuntu\grubx64.efi`
 
 ### Method 3: Restore `{bootmgr}` via Command Prompt (Windows Recovery / USB)
+
 If `{bootmgr}` itself is broken and no other entry works:
+
 1. Boot from a **Windows Installation USB** (or let Windows fail 3 times to trigger **Automatic Repair**).
 2. Go to **Repair your computer** → **Troubleshoot** → **Advanced options** → **Command Prompt**.
 3. Reset `{bootmgr}` to the default Windows bootloader:
    ```cmd
    bcdedit /set "{bootmgr}" path \EFI\Microsoft\Boot\bootmgfw.efi
    ```
-4. *(Optional)* If the EFI partition is damaged, rebuild the boot files completely:
+4. _(Optional)_ If the EFI partition is damaged, rebuild the boot files completely:
    ```cmd
    diskpart
    list volume
    ```
-   *(Identify the FAT32 volume of ~100MB-500MB, e.g., Volume 2, and assign it a letter)*:
+   _(Identify the FAT32 volume of ~100MB-500MB, e.g., Volume 2, and assign it a letter)_:
    ```cmd
    select volume 2
    assign letter=Z:
@@ -122,10 +139,13 @@ If `{bootmgr}` itself is broken and no other entry works:
 5. Close the terminal and click **Continue** to boot normally into Windows.
 
 ---
+
 ---
 
 # 🇪🇸 Español
+
 # BootScribe v3.0.0
+
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-0078D6?logo=windows&logoColor=white)
 ![License](https://img.shields.io/badge/License-Open%20Source-green)
@@ -173,16 +193,25 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 
 > [!IMPORTANT]
 > **Sobre Entradas Deshabilitadas / rEFInd**  
-> En sistemas modernos con Windows 10 y 11, las políticas de seguridad del sistema operativo pueden impedir modificar el estado de habilitación (*Active Flag*) de una entrada UEFI creada por terceros directamente desde Windows.
+> En sistemas modernos con Windows 10 y 11, las políticas de seguridad del sistema operativo pueden impedir modificar el estado de habilitación (_Active Flag_) de una entrada UEFI creada por terceros directamente desde Windows.
 >
 > **Flujo de trabajo recomendado para nuevas entradas:**
+>
 > 1. Crea y registra tu nueva entrada (ej. rEFInd) usando **BootScribe**.
 > 2. Utiliza el botón de reinicio directo para ingresar a la configuración de la **BIOS / UEFI**.
-> 3. Habilita la nueva entrada creada y selecciónala como primera en el orden de prioridad del firmware (*Boot Priority Order*).
+> 3. Habilita la nueva entrada creada y selecciónala como primera en el orden de prioridad del firmware (_Boot Priority Order_).
 
 > [!WARNING]
 > **Sobre Windows Defender / SmartScreen**  
 > Como BootScribe es una herramienta gratuita y de código abierto compilada sin un certificado comercial de firma digital, es posible que Windows SmartScreen muestre una advertencia al abrirlo por primera vez. Puedes omitirla de forma segura haciendo clic en **"Más información" → "Ejecutar de todos modos"**. Todo el código fuente está disponible en este repositorio para su auditoría.
+>
+> **Comportamiento Conocido (Alerta `The NVRAM changed`):**
+> La función de blindar/redirigir `{bootmgr}` escribe en la NVRAM de forma inmediata. Si primero blindas `{bootmgr}` y luego modificas el orden de prioridades sin recargar la lista, la verificación de seguridad de BootScribe bloqueará el guardado mostrando _"The NVRAM changed since the list was loaded"_ para evitar sobrescribir un estado desactualizado.
+>
+> **Cómo evitarlo:**
+>
+> 1. **Modifica primero el orden de prioridades y guarda los cambios**, dejando el **blindaje de `{bootmgr}` como último paso**; O BIEN,
+> 2. Si ya blindaste `{bootmgr}`, haz clic en **Descartar / Actualizar** para recargar el estado actual de la NVRAM antes de reordenar las entradas.
 
 ---
 
@@ -191,22 +220,25 @@ En sistemas Windows modernos con restricciones de NVRAM y Secure Boot, el sistem
 Si deseas clonar este repositorio y compilar la aplicación tú mismo:
 
 1. **Requisitos:** Instalar **Python 3.10** o superior e instalar **PyInstaller**:
+
    ```cmd
    pip install pyinstaller
    ```
 
 2. **Compilar la aplicación:** Ejecuta el siguiente comando en la raíz del proyecto (asegurándote de incluir la carpeta `fonts` y el icono `bootscribe.ico`):
+
    ```cmd
    pyinstaller --clean --onedir --noconsole --uac-admin --icon bootscribe.ico --add-data "fonts;fonts" --name BootScribe bootscribe.py
    ```
 
 3. **Ejecutar:** Encontrarás el programa compilado y listo para usar dentro de la carpeta `dist\BootScribe\BootScribe.exe`.
 
-##  Recuperación y Solución de Problemas (Si el sistema no arranca)
+## Recuperación y Solución de Problemas (Si el sistema no arranca)
 
 Si se configura una ruta `.efi` inválida o una entrada se corrompe, el Gestor de Arranque de Windows (`{bootmgr}`) puede fallar al iniciar (mostrando un error como `0xc000000f` o `0xc0000225`). Puedes restaurar cualquier gestor de arranque directamente desde tu **BIOS/UEFI** o la **Recuperación de Windows** sin perder datos:
 
 ### Método 1: Cambiar la Prioridad de Arranque en BIOS/UEFI (El más rápido)
+
 1. **Entrar a la BIOS/UEFI:** Reinicia tu PC y presiona repetidamente la tecla de configuración de tu placa madre (`F2`, `F12`, `SUPR/DEL`, `ESC` o `F10` según el fabricante).
 2. **Ir a las opciones de arranque:** Dirígete a la pestaña **Boot** o **Startup**.
 3. **Cambiar prioridad / Boot Override:**
@@ -215,9 +247,11 @@ Si se configura una ruta `.efi` inválida o una entrada se corrompe, el Gestor d
 4. **Guardar y salir:** Presiona `F10` para guardar los cambios y reiniciar. Una vez dentro de Windows, abre **BootScribe** y corrige o restablece la ruta de `{bootmgr}`.
 
 ### Método 2: Arrancar desde un archivo `.efi` específico (ASUS, Dell, HP, Lenovo, MSI)
+
 Muchos firmwares UEFI modernos incluyen un explorador de archivos EFI integrado:
+
 1. Entra a la configuración de tu **BIOS/UEFI** o al **Menú de Arranque Único** (`F12`, `F8`, `F11` o `ESC`).
-2. Selecciona **Boot from EFI File** (o *Arrancar desde archivo EFI*).
+2. Selecciona **Boot from EFI File** (o _Arrancar desde archivo EFI_).
 3. Elige tu **Partición del Sistema EFI (ESP)** (usualmente una partición FAT32 pequeña de `100MB a 500MB`).
 4. Navega y selecciona el binario `.efi` que desees iniciar:
    - **Windows por defecto:** `\EFI\Microsoft\Boot\bootmgfw.efi`
@@ -225,19 +259,21 @@ Muchos firmwares UEFI modernos incluyen un explorador de archivos EFI integrado:
    - **GRUB (Ubuntu/Debian):** `\EFI\ubuntu\grubx64.efi`
 
 ### Método 3: Restaurar `{bootmgr}` desde Símbolo del Sistema (Recuperación de Windows / USB)
+
 Si el propio `{bootmgr}` quedó dañado y ninguna otra entrada inicia:
+
 1. Arranca desde un **USB de instalación de Windows** (o deja que Windows falle 3 veces seguidas para que abra la **Reparación automática**).
 2. Ve a **Reparar el equipo** → **Solucionar problemas** → **Opciones avanzadas** → **Símbolo del sistema**.
 3. Restablece `{bootmgr}` al cargador predeterminado de Windows:
    ```cmd
    bcdedit /set "{bootmgr}" path \EFI\Microsoft\Boot\bootmgfw.efi
    ```
-4. *(Opcional)* Si los archivos de arranque EFI se dañaron por completo, reconstrúyelos:
+4. _(Opcional)_ Si los archivos de arranque EFI se dañaron por completo, reconstrúyelos:
    ```cmd
    diskpart
    list volume
    ```
-   *(Identifica el volumen FAT32 de ~100MB-500MB, por ejemplo Volumen 2, y asígnale una letra)*:
+   _(Identifica el volumen FAT32 de ~100MB-500MB, por ejemplo Volumen 2, y asígnale una letra)_:
    ```cmd
    select volume 2
    assign letter=Z:
