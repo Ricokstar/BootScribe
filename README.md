@@ -155,7 +155,7 @@ If `{bootmgr}` itself is broken and no other entry works:
 ![Language](https://img.shields.io/badge/Language-EN%20%7C%20ES-orange)
 <img width="1575" height="902" alt="Vista BootScribe v3 0 0" src="https://github.com/user-attachments/assets/01772099-5629-4685-9357-178b8666c1f0" />
 
--v3.1.0: Corrección de algunos problemas con el bloqueo y la NVRAM.
+-v3.1.0: Corrección de algunos problemas con el Blindado y la NVRAM.
 
 Una alternativa ligera, portátil y de código abierto a las herramientas comerciales de gestión UEFI, desarrollada en Python y `tkinter`.
 
