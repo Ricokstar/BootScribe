@@ -41,7 +41,7 @@ def _(s):
 DEFAULT_LANG = "en"      # idioma inicial la primera vez que se abre
 DEFAULT_THEME = "dark"   # tema inicial la primera vez que se abre
 
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 APP_NAME = f"BootScribe v{VERSION}"
 APP_ID = "BootScribe"    # identificador interno: no cambia con la versión (carpeta de datos y copias)
 CREATE_NO_WINDOW = 0x08000000
@@ -1280,6 +1280,47 @@ class ChangeDialog(Dialog):
         self.destroy()
 
 
+class ChoiceDialog(Dialog):
+    """Texto + lista de detalles + varias opciones. choice: clave pulsada ('cancel' al cerrar).
+    Los botones se indican en el orden en que se ven, de izquierda a derecha."""
+
+    def __init__(self, app, title, headline, lines, buttons):
+        super().__init__(app, title)
+        self.choice = None
+        c, sc = app.c, app.sc
+        f = ttk.Frame(self, padding=(sc(26), sc(22), sc(26), sc(20)))
+        f.pack(fill="both", expand=True)
+        head = ttk.Frame(f)
+        head.pack(fill="x")
+        ttk.Label(head, image=app.icon("alert", c["warn"], sc(26)), style="Dlg.TLabel").pack(
+            side="left", padx=(0, sc(12)), anchor="n")
+        ttk.Label(head, text=headline, style="Dlg.TLabel", wraplength=sc(520), justify="left").pack(side="left")
+        if lines:
+            ttk.Label(f, text=_("Qué cambió:"), style="Dlg.Muted.TLabel").pack(anchor="w", pady=(sc(14), sc(4)))
+            border = tk.Frame(f, bg=c["border"], padx=1, pady=1)
+            border.pack(fill="x")
+            box = tk.Frame(border, bg=c["surface"])
+            box.pack(fill="x")
+            for ln in lines:
+                tk.Label(box, text="•  " + ln, bg=c["surface"], fg=c["text"], font=app.f_small, anchor="w",
+                         justify="left", wraplength=sc(540), padx=sc(12), pady=sc(4)).pack(fill="x")
+        bf = ttk.Frame(f)
+        bf.pack(fill="x", pady=(sc(18), 0))
+        for key, text, style in reversed(buttons):
+            b = app.make_button(bf, text, None, lambda k=key: self.pick(k), style, reg=False)
+            b.pack(side="right", padx=(sc(8), 0))
+            if style == "Primary.TButton":
+                self._focus = b
+
+    def pick(self, choice):
+        self.choice = choice
+        self.destroy()
+
+    def cancel(self):
+        self.choice = "cancel"
+        self.destroy()
+
+
 class UnsavedDialog(Dialog):
     """Se muestra al cerrar con cambios sin guardar. choice: 'save', 'discard' o 'cancel'."""
 
@@ -2060,6 +2101,35 @@ class App:
         if update:
             self.update_toggle()
 
+    def resync_nvram(self):
+        """Tras una acción inmediata propia que modifica la NVRAM ({bootmgr}), actualiza la base de referencia
+        sin perder los cambios pendientes. Lo que cambie por fuera DESPUÉS de este momento se sigue detectando."""
+        self.reload_bm()
+        try:
+            order_now, cur = self.nv.read_all()
+        except NvramError as ex:
+            self.fail(_("No se pudo leer la NVRAM"), ex)
+            return
+        diff = self.nvram_diff(order_now, cur)
+        if self.diff_empty(diff):
+            return
+        for ln in self.describe_diff(diff, cur):
+            self.lg("info", _("Por {bootmgr}: %s") % ln)
+        if self.dirty:
+            mine = {e.num for e in self.W.values() if not e.is_new and e.changed}
+            clash = sorted(mine & (set(diff["modified"]) | set(diff["removed"])))
+            self.rebase_draft(announce=False)
+            if clash:
+                self.lg("warn", _("Tus cambios sobre %s se conservaron, pero {bootmgr} también modificó esa "
+                                  "entrada; revisa el resumen antes de guardar.") % ", ".join(
+                                      "Boot%04X" % n for n in clash))
+        else:
+            sel = self.tree.selection()
+            self.load_base()
+            self.render(sel[0] if sel else None)
+        self.lg("info", _("Se sincronizó el estado de la NVRAM tras cambiar {bootmgr}; tus cambios pendientes "
+                          "se conservan."))
+
     # ---- presentación ----
     def state_text(self, e):
         if e.deleted:
@@ -2380,12 +2450,118 @@ class App:
                          self.W[d1].name if d1 else _("ninguna")))
         return rows
 
-    def snapshot_differs(self, order_now, cur):
-        if order_now != self.base_order or {e.num for e in cur} != set(self.base_map):
-            return True
-        return any(self.base_map[e.num].raw != e.raw or self.base_map[e.num].attrs != e.attrs for e in cur)
+    def nvram_diff(self, order_now, cur):
+        """Compara la NVRAM actual con la que se cargó en la lista."""
+        d = {"order": None, "added": [], "removed": [], "modified": {}}
+        if order_now != self.base_order:
+            d["order"] = (list(self.base_order), list(order_now))
+        now = {e.num: e for e in cur}
+        d["added"] = sorted(set(now) - set(self.base_map))
+        d["removed"] = sorted(set(self.base_map) - set(now))
+        for n in sorted(set(now) & set(self.base_map)):
+            a, b = self.base_map[n], now[n]
+            if a.raw == b.raw and a.attrs == b.attrs:
+                continue
+            why = []
+            if a.name != b.name:
+                why.append(_("nombre"))
+            if a.active != b.active:
+                why.append(_("estado"))
+            if a.path != b.path:
+                why.append(_("ruta"))
+            if a.attrs != b.attrs:
+                why.append(_("atributos"))
+            d["modified"][n] = why or [_("otros datos")]
+        return d
 
-    def save_changes(self):
+    @staticmethod
+    def diff_empty(d):
+        return not (d["order"] or d["added"] or d["removed"] or d["modified"])
+
+    def describe_diff(self, d, cur):
+        """Líneas legibles con lo que cambió por fuera."""
+        names = {e.num: e.name for e in cur}
+        names.update({n: e.name for n, e in self.base_map.items() if n not in names})
+        nm = lambda n: "%s (Boot%04X)" % (names.get(n, "?"), n)
+        lines = []
+        if d["order"]:
+            lines.append(_("Orden de arranque: %s → %s") % (
+                "  →  ".join(names.get(n, "Boot%04X" % n) for n in d["order"][0]) or _("(vacío)"),
+                "  →  ".join(names.get(n, "Boot%04X" % n) for n in d["order"][1]) or _("(vacío)")))
+        for n in d["added"]:
+            lines.append(_("%s fue agregada por fuera") % nm(n))
+        for n in d["removed"]:
+            lines.append(_("%s fue eliminada por fuera") % nm(n))
+        for n, why in d["modified"].items():
+            lines.append(_("%s fue modificada por fuera (%s)") % (nm(n), ", ".join(why)))
+        return lines
+
+    def diff_conflicts(self, d):
+        """True si el cambio externo choca con lo que se va a guardar; False si se puede fusionar sin riesgo."""
+        if d["order"] and self.final_keys() != self.base_keys():        # vamos a escribir BootOrder
+            return True
+        mine = {e.num for e in self.W.values() if not e.is_new and e.changed}
+        return bool(mine & (set(d["modified"]) | set(d["removed"])))
+
+    def rebase_draft(self, announce=True):
+        """Recarga la NVRAM y vuelve a aplicar encima los cambios preparados."""
+        old_W, old_order = self.W, list(self.w_order)
+        order_touched = self.order_changed()
+        intents = {}
+        for k, e in old_W.items():
+            if e.is_new:
+                continue
+            it = {}
+            if e.deleted:
+                it["deleted"] = True
+            if e.name != e.base.name:
+                it["name"] = e.name
+            if e.active != e.base.active:
+                it["active"] = e.active
+            if it:
+                intents[k] = it
+        news = [e for e in old_W.values() if e.is_new]
+        existing = [k for k in old_order if not old_W[k].is_new]
+        front = {e.key for e in news if e.key in old_order and
+                 (not existing or old_order.index(e.key) < old_order.index(existing[0]))}
+        self.load_base()
+        for k, it in intents.items():
+            e = self.W.get(k)
+            if e is None:
+                self.lg("warn", _("Se descartó el cambio preparado en %s porque esa entrada ya no existe.") % k)
+                continue
+            e.deleted = bool(it.get("deleted"))
+            if "name" in it:
+                e.name = it["name"]
+            if "active" in it:
+                e.active = it["active"]
+        for e in news:
+            self.W[e.key] = e
+        self.new_seq = max([int(e.key.split(":")[1]) for e in news] or [0])
+        base_keys = self.base_keys()
+        if order_touched:
+            merged = [k for k in old_order if k in self.W]
+            merged += [k for k in base_keys if k not in merged]
+        else:
+            merged = list(base_keys)
+            for e in news:
+                if e.key in front:
+                    merged.insert(0, e.key)
+                else:
+                    merged.append(e.key)
+        self.w_order = merged
+        self.w_rest = [k for k in self.w_rest if k not in merged]
+        self.render()
+        if announce:
+            self.lg("info", _("Se volvieron a aplicar tus cambios sobre el estado actual de la NVRAM."))
+
+    def ask_choice(self, title, headline, lines, buttons):
+        d = ChoiceDialog(self, title, headline, lines, buttons)
+        d.show()
+        self.root.wait_window(d)
+        return d.choice or "cancel"
+
+    def save_changes(self, depth=0):
         """Aplica a la NVRAM todos los cambios preparados (un solo resumen antes/después)."""
         if not self.dirty:
             self.toast(_("No hay cambios pendientes."), "info", 2200)
@@ -2396,12 +2572,34 @@ class App:
         except NvramError as ex:
             self.fail(_("No se pudo leer la NVRAM"), ex)
             return False
-        if self.snapshot_differs(order_now, cur):
-            messagebox.showerror(_("La NVRAM cambió"),
-                                 _("La NVRAM cambió desde que se cargó la lista (otro programa o Windows pudo "
-                                   "modificarla).\n\nPulsa Descartar para recargar el estado actual y vuelve a "
-                                   "preparar tus cambios. No se aplicó nada."), parent=parent)
-            return False
+        diff = self.nvram_diff(order_now, cur)
+        if not self.diff_empty(diff):
+            lines = self.describe_diff(diff, cur)
+            for ln in lines:
+                self.lg("warn", ln)
+            if depth >= 2:
+                messagebox.showerror(_("La NVRAM cambió"),
+                                     _("No se pudo conciliar los cambios con la NVRAM. Pulsa Descartar y vuelve a "
+                                       "intentarlo."), parent=parent)
+                return False
+            if self.diff_conflicts(diff):
+                choice = self.ask_choice(
+                    _("La NVRAM cambió"),
+                    _("La NVRAM cambió desde que se cargó la lista y eso afecta a lo que quieres guardar. "
+                      "No se aplicó nada."), lines,
+                    [("cancel", _("Cancelar"), "Tool.TButton"),
+                     ("discard", _("Descartar mis cambios y recargar"), "Danger.TButton"),
+                     ("keep", _("Recargar y mantener mis cambios"), "Primary.TButton")])
+                if choice == "discard":
+                    self.refresh(force=True)
+                    return False
+                if choice != "keep":
+                    return False
+            else:
+                self.lg("info", _("La NVRAM cambió por fuera, pero no afecta a tus cambios: se actualizó la "
+                                  "lista y se continúa."))
+            self.rebase_draft()
+            return self.save_changes(depth + 1) if self.dirty else True
         fin = self.final_keys()
         if not fin or not any(self.W[k].active for k in fin):
             messagebox.showwarning(_("No permitido"),
@@ -3026,7 +3224,7 @@ class App:
             ok1, out1 = self.bcd(["/set", "{bootmgr}", "path", path])
             if not ok1:
                 self.fail(titulo, _("No se pudo cambiar la ruta; no se modificó nada.\n%s") % out1.strip())
-                self.reload_bm()
+                self.resync_nvram()
                 return False
             ok2, out2 = self.bcd(["/set", "{bootmgr}", "description", desc])
             if not ok2:
@@ -3041,7 +3239,7 @@ class App:
         if problem is None:
             self.lg("ok", "%s: {bootmgr} → %s (%s)." % (titulo, path, desc))
             self.toast(_("%s completado.") % titulo, "success")
-            self.reload_bm()
+            self.resync_nvram()
             return True
         self.lg("err", "%s: %s %s" % (titulo, problem, _("Revirtiendo al estado anterior…")))
         r1, _o1 = self.bcd(["/set", "{bootmgr}", "path", old_path])
@@ -3058,7 +3256,7 @@ class App:
                                            "bcdedit /import \"<archivo .bcd exportado>\"\n"
                                            "(o vuelve a poner la ruta a %s).") % (problem, old_path or WIN_PATH),
                                  parent=self.msg_parent())
-        self.reload_bm()
+        self.resync_nvram()
         return False
 
 
@@ -3359,6 +3557,37 @@ EN.update({
         "The SeSystemEnvironmentPrivilege privilege is missing (run as Administrator).",
 })
 
+
+
+EN.update({
+    "La NVRAM cambió desde que se cargó la lista y eso afecta a lo que quieres guardar. No se aplicó nada.":
+        "The NVRAM changed since the list was loaded, and that affects what you want to save. Nothing was applied.",
+    "Qué cambió:": "What changed:",
+    "Recargar y mantener mis cambios": "Reload and keep my changes",
+    "Descartar mis cambios y recargar": "Discard my changes and reload",
+    "Orden de arranque: %s → %s": "Boot order: %s → %s",
+    "%s fue agregada por fuera": "%s was added externally",
+    "%s fue eliminada por fuera": "%s was removed externally",
+    "%s fue modificada por fuera (%s)": "%s was modified externally (%s)",
+    "nombre": "name", "estado": "state", "ruta": "path", "atributos": "attributes", "otros datos": "other data",
+    "La NVRAM cambió por fuera, pero no afecta a tus cambios: se actualizó la lista y se continúa.":
+        "The NVRAM changed externally, but it does not affect your changes: the list was updated and saving continues.",
+    "Se descartó el cambio preparado en %s porque esa entrada ya no existe.":
+        "The staged change on %s was dropped because that entry no longer exists.",
+    "Se volvieron a aplicar tus cambios sobre el estado actual de la NVRAM.":
+        "Your changes were re-applied on top of the current NVRAM state.",
+    "No se pudo conciliar los cambios con la NVRAM. Pulsa Descartar y vuelve a intentarlo.":
+        "The changes could not be reconciled with the NVRAM. Press Discard and try again.",
+})
+
+
+EN.update({
+    "Por {bootmgr}: %s": "From {bootmgr}: %s",
+    "Se sincronizó el estado de la NVRAM tras cambiar {bootmgr}; tus cambios pendientes se conservan.":
+        "The NVRAM state was synchronized after changing {bootmgr}; your pending changes are kept.",
+    "Tus cambios sobre %s se conservaron, pero {bootmgr} también modificó esa entrada; revisa el resumen antes de guardar.":
+        "Your changes on %s were kept, but {bootmgr} also modified that entry; review the summary before saving.",
+})
 
 
 def main():
